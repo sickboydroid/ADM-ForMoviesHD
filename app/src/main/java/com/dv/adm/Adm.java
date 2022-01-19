@@ -12,29 +12,19 @@ public class Adm extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //setContentView(R.layout.activity_main);
-        //tv = findViewById(R.id.tv);
-        //tv.setText("__________________");
-        main();
+        copyCommand();
     }
 
-    public void main() {
+    public void copyCommand() {
+        Utils.showToast(this, "DONE: UPDATED");
         Bundle extras = getIntent().getExtras();
         String title = extras.getString("title");
-        String url = extras.getString("url");
+        //String url = extras.getString("url");
+        //String userAgent = extras.getString("user-agent");
         String cookie = extras.getString("cookie");
-        String userAgent = extras.getString("user-agent");
         String data = getIntent().getData().toString();
         title = title.replaceAll("\\[.*\\]", "").trim();
-        title += ".mp4";
-        String commandDownload = String.format("wget -c --header='Cookie: %s' %s -O '%s'", cookie, data, title);
-        /*
-           log("Title: " + extras.getString("title"));
-           log("Url: " + extras.getString("url"));
-           log("Cookie: " + extras.getString("cookie"));
-           log("User-agent: " + extras.getString("User-agent"));
-           log("Data: " + getIntent().getData());
-           */
+        String commandDownload = String.format("wget -c --header='Cookie: %s' '%s' -O '%s'", cookie, data, title);
         copyToClipboard(commandDownload);
         finish();
     }
@@ -44,9 +34,5 @@ public class Adm extends Activity {
         ClipData clip = ClipData.newPlainText("ADM", data);
         clipboard.setPrimaryClip(clip);
         Utils.showToast(this, "Copied to clipboard!");
-    }
-
-    public void log(Object msg) {
-        tv.setText(tv.getText().toString() + "\n" + msg);
     }
 }

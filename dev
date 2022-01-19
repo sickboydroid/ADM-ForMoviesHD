@@ -1,8 +1,7 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/bin/bash
 
 # Compiles whole android project
 compile_proj () {
-    clear
     # Generare build and other necessary directrories if they don't exist
     [ ! -d "app/build/bin" ] && mkdir -p app/build/bin
     [ ! -d "app/build/gen" ] && mkdir -p app/build/gen
@@ -36,7 +35,7 @@ compile_proj () {
 
     # Convert java bite code to dx
     echo "Dexing <java> code..."
-    dx --dex --output=app/build/bin/classes.dex app/build/obj
+    d8 --output app/build/bin $(find app/build/obj -name "*.class" -type f)
     if [ $? -ne 0 ]
     then
 	echo "--------------------------"
@@ -69,118 +68,27 @@ compile_proj () {
 	echo "--------------------------"
 	return -1
     fi
-    cp resources.apk app-unsigned.apk
+    cp resources.apk adm-unsigned.apk
     printf "done\n\n"
 
-    # Sign apk file
-    echo "Signing <apk> file..."
-    jarsigner --keystore /data/data/com.termux/files/home/docs/programmingRelated/android/keys/release-key.keystore -storepass 1021n194 app-unsigned.apk release-key &> /dev/null
-    if [ $? -ne 0 ]
-    then
-	echo "--------------------------"
-	return -1
-    fi
-    zipalign -f 4 app-unsigned.apk app-signed.apk
-    if [ $? -ne 0 ]
-    then
-	echo "--------------------------"
-	return -1
-    fi
-    printf "done\n\n"
-
-    # Prompt for install
-    echo "Installing <apk> file..."
-    cp app-signed.apk /sdcard/SickBoyDir/temp
-    am start \
-	--activity-clear-top \
-       --es path "/sdcard/SickBoyDir/temp/app-signed.apk" \
-       -n com.gameofcoding.devcolleague/.activities.AppInstallerActivity > /dev/null
+    # Copy app
+    echo "Copying <apk> file to </sdcard/SickBoyDir/temp/adm-unsigned.apk>..."
+    cp adm-unsigned.apk /sdcard/SickBoyDir/temp
     printf "done\n\n"
     cd ../../..
 }
 
-# Uploads proj
-upload_proj () {
-    printf 'Copying project...'
-    # Remove prevoius source code
-    rm -r "$1/source/"*
-    # Copy source code to external directory
-    cp -r * "$1/source"
-    cd "$1/source"
-    # Remove this file 'dev' and copy file 'remote_dev' to copied source code
-    rm dev
-    cp ~/.android/assets/remote_dev ./dev
-    printf 'Done\n\n'
-    
-    # Commit and push changes to remote repository
-    echo '---------Uploading-----------'
-    git add -A
-    git commit -m "commit at $(date  +"%I:%M %p")"
-    git push -f
-    echo '-----------Done--------------'
-}
-
-# Downloads output of proj
-download_outputs () {
-    # Download Outputs
-    echo "===============Downloading outputs============"
-    cd "$1/outputs"
-    git pull
-    echo "=============================================="
-
-    # Copy files to internal storage.
-    cp -r * /sdcard/SickBoyDir/temp
-}
-
-
-# Installs app
-install_app () { 
-    # Prompt for install
-    echo "Installing..."
-    am broadcast \
-       -a com.gameofcoding.devcolleague.INSTALL_APP \
-       --es app_path "/sdcard/SickBoyDir/temp/app-debug.apk" \
-       -n com.gameofcoding.devcolleague/.broadcasts.HelperBroadcastsReceiver > /dev/null
-    printf "Done\n\n"
-}
-
-# Shows problems like errors, lints, etc.
-show_probs () {
-    # Show probs
-    echo "Showing probs..."
-    am broadcast \
-       -a com.gameofcoding.devcolleague.SHOW_PROBS \
-       -n com.gameofcoding.devcolleague/.broadcasts.HelperBroadcastsReceiver > /dev/null
-    printf "Done\n\n"
-}
-#####################################
-
+##############################
+echo """
+------------------------------
+WARNING: I (sickboydroid) made this script to automate my setup on terminal.
+         I Don't think it would work for you.
+         However, you can build this apk like the rest of apps.
+------------------------------
+"""
 # Get name and external dir of project
 PROJECT_NAME=$(basename "$PWD")
 PROJ_EXT_DIR="$HOME/.android/projs/ADM"
 
-case $1 in
-    compile)
-	compile_proj "$PROJECT_NAME"
-	;;
-    up | upload)
-	upload_proj "$PROJ_EXT_DIR"
-	;;
-    down | download)
-	download_outputs "$PROJ_EXT_DIR" "$PROJECT_NAME"
-	;;
-    probs | show_probs)
-	if [ "$2" == "true" ]; then
-	     download_outputs "$PROJ_EXT_DIR" "$PROJECT_NAME"
-	fi
-	show_probs
-	;;
-    install | install_app)
-	if [ "$2" == "true" ]; then
-	     download_outputs "$PROJ_EXT_DIR" "$PROJECT_NAME"
-	fi
-	install_app "$PROJECT_NAME"
-	;;
-    *)
-	printf "Falied to manipulate given argument '$1'.\n"
-esac
+rm -rf app/build
+compile_proj "$PROJECT_NAME"
