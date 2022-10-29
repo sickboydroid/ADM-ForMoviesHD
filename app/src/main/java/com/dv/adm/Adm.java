@@ -16,16 +16,14 @@ public class Adm extends Activity {
     }
 
     public void copyCommand() {
-        Utils.showToast(this, "DONE: UPDATED");
         Bundle extras = getIntent().getExtras();
         String title = extras.getString("title");
-        //String url = extras.getString("url");
-        //String userAgent = extras.getString("user-agent");
         String cookie = extras.getString("cookie");
         String data = getIntent().getData().toString();
         title = title.replaceAll("\\[.*\\]", "").trim();
-        String commandDownload = String.format("wget -c --header='Cookie: %s' '%s' -O '%s'", cookie, data, title);
+        String commandDownload = String.format("wget -c --header=\"Cookie: %s\" \"%s\" -O \"%s\"", cookie, data, title);
         copyToClipboard(commandDownload);
+        Utils.showToast(this, "Copied to clipboard!");
         finish();
     }
 
@@ -33,6 +31,5 @@ public class Adm extends Activity {
         ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText("ADM", data);
         clipboard.setPrimaryClip(clip);
-        Utils.showToast(this, "Copied to clipboard!");
     }
 }

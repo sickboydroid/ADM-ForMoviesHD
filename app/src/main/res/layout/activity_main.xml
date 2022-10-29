@@ -5,6 +5,7 @@
     android:layout_height="match_parent"
     android:gravity="center">
 <TextView
+    android:padding="7dp"
     android:textIsSelectable="true"
     android:id="@+id/tv"
     android:layout_width="match_parent"
